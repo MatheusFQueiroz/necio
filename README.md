@@ -28,7 +28,7 @@ cargo build --workspace
 
 ## Usage
 
-Compile a Necio program to Rust:
+Compile Necio program to Rust:
 
 ```bash
 cargo run --bin necio -- <input.necio> <output.rs>
