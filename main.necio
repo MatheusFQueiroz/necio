@@ -1,0 +1,127 @@
+integer sum (a: integer, b: integer) {
+    return a + b;
+}
+
+interface address {
+    street: string;
+    number: integer;
+    city: string;
+    state: string;
+    zip_code: string;
+}
+
+interface person {
+    name: string;
+    age: integer;
+    is_adult: boolean;
+    height: float;
+    address: <address>;
+    friends: <person>[];
+}
+
+person matheus := {
+    name: "Matheus",
+    age: 20,
+    is_adult: true,
+    height: 1.78,
+    address: {
+        street: "Rua 1",
+        number: 1,
+        city: "São Paulo",
+        state: "SP",
+        zip_code: "00000-000"
+    },
+    friends: []
+};
+
+person julia := {
+    name: "Julia",
+    age: 21,
+    is_adult: true,
+    height: 1.65,
+    address: {
+        street: "Rua 2",
+        number: 2,
+        city: "São Paulo",
+        state: "SP",
+        zip_code: "00000-000"
+    },
+    friends: [
+        matheus,
+    ]
+};
+
+matheus.friends.push(julia);
+
+printl(matheus.friends[0].name);
+
+enum animal_type {
+    cat,
+    dog,
+    bird,
+    snake,
+}
+
+class animal {
+    name: string;
+    type: <animal_type>;
+    is_dangerous: boolean;
+
+    animal (name: string, type: <animal_type>) {
+        this.name := name;
+        this.type := type;
+    }
+
+    public void make_sound () {
+        if (this.type == animal_type.cat) {
+            printl("Meow");
+        } else if (this.type == animal_type.dog) {
+            printl("Woof");
+        } else if (this.type == animal_type.bird) {
+            printl("Chirp");
+        } else if (this.type == animal_type.snake) {
+            printl("Hiss");
+        }
+    }   
+
+    private void set_is_dangerous () {
+        if (this.type == animal_type.snake) {
+            this.is_dangerous := true;
+        } else {
+            this.is_dangerous := false;
+        }
+    }
+}
+
+animal cat := animal("Jasmini", animal_type.cat);
+cat.make_sound();
+cat.set_is_dangerous();
+printl(cat.name + " is dangerous: " + cat.is_dangerous);
+
+void main () {
+    let x: integer;
+    let name: string := "Matheus";
+
+    x := 1;
+    let y: integer := sum(x, 2);
+    let z: integer := printl(sum(x, 3));
+
+    let *num: integer := 1;
+    num := 2; // Keep the borrowing of rust
+    printl(num); // Expect 2
+
+    if (x > 2) {
+        printl("x is greater than 2");
+    } else {
+        printl("x is not greater than 2");
+    }
+
+    let *loop: integer := 1;
+    do {
+        printl(loop);
+        loop := loop++;
+    } while (loop < 10);
+
+    printl(x);
+    printl("Hello " + name);
+}
