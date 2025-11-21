@@ -1,4 +1,4 @@
-# Necio Programming Language
+# Necio
 
 A statically-typed programming language that transpiles to Rust, featuring interfaces, classes, enums, and Rust-like mutability semantics.
 
