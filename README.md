@@ -38,9 +38,10 @@ Example:
 
 ```bash
 # Compile Necio to Rust
-cargo run --bin necio -- examples/main.necio output.rs
+cargo run --bin necio -- examples/main.necio output/output.rs
 
 # Compile and run the generated Rust code
+cd output
 rustc output.rs -o output.exe
 ./output
 ```
