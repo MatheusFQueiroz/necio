@@ -152,10 +152,7 @@ impl Lexer {
                     self.position += 2;
                     Token::EqEq
                 } else {
-                    // Single = not used in this grammar yet? Or maybe for default args?
-                    // Assuming only == for now based on sample
                     self.position += 1;
-                    // Treat as unknown or maybe Assign if we supported =
                     panic!("Unexpected char =");
                 }
             }

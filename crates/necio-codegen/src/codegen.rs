@@ -61,7 +61,6 @@ impl Codegen {
             }
         }
         
-        // Pass 2: Main
         code.push_str("fn main() {\n");
         for item in &self.program.items {
             if let TopLevel::Statement(stmt) = item {
@@ -85,10 +84,32 @@ impl Codegen {
     }
 
     fn to_pascal_case(&self, s: &str) -> String {
-        let mut c = s.chars();
-        match c.next() {
-            None => String::new(),
-            Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+        s.split('_')
+            .filter(|word| !word.is_empty())
+            .map(|word| {
+                let mut chars = word.chars();
+                match chars.next() {
+                    None => String::new(),
+                    Some(f) => f.to_uppercase().collect::<String>() + chars.as_str(),
+                }
+            })
+            .collect()
+    }
+    
+    fn is_string_expr(&self, expr: &Expression) -> bool {
+        match expr {
+            Expression::Literal(_, Type::String) => true,
+            Expression::Variable(_) => false,
+            Expression::Binary(_, op, _) if op == "+" => true,
+            Expression::Member(_, _) => false,
+            Expression::Call(callee, _) => {
+                if let Expression::Member(_, method_name) = &**callee {
+                    method_name == "to_string"
+                } else {
+                    false
+                }
+            }
+            _ => false,
         }
     }
 
@@ -101,7 +122,7 @@ impl Codegen {
 
     fn generate_enum(&self, enm: &Enum) -> String {
         let variants: Vec<String> = enm.variants.iter()
-            .map(|v| format!("    {},", self.escape_identifier(v)))
+            .map(|v| format!("    {},", self.to_pascal_case(&self.escape_identifier(v))))
             .collect();
         format!("#[derive(Debug, Clone, PartialEq)]\nenum {} {{\n{}\n}}\n", self.to_pascal_case(&enm.name), variants.join("\n"))
     }
@@ -155,10 +176,9 @@ impl Codegen {
             Type::Void => "()".to_string(),
             Type::Array(_) => "Vec::new()".to_string(),
             Type::Custom(name) => {
-                // Check if Enum or Struct
                 if let Some(TypeDef::Enum(e)) = self.type_defs.get(name) {
                     if let Some(first) = e.variants.first() {
-                        return format!("{}::{}", self.to_pascal_case(name), self.escape_identifier(first));
+                        return format!("{}::{}", self.to_pascal_case(name), self.to_pascal_case(&self.escape_identifier(first)));
                     }
                 } else if let Some(TypeDef::Class(c)) = self.type_defs.get(name) {
                     let fields: Vec<String> = c.fields.iter()
@@ -294,13 +314,34 @@ impl Codegen {
             },
             Expression::Binary(left, op, right) => {
                 if op == "+" {
-                    format!("{} {} &({})", self.generate_expression(left, None), op, self.generate_expression(right, None))
+                    let left_is_str = self.is_string_expr(left);
+                    let right_is_str = self.is_string_expr(right);
+                    
+                    if left_is_str || right_is_str {
+                        let left_expr = self.generate_expression(left, None);
+                        let right_expr = self.generate_expression(right, None);
+                        
+                        let left_str = if left_is_str {
+                            left_expr
+                        } else {
+                            format!("({}).to_string()", left_expr)
+                        };
+                        
+                        let right_str = if right_is_str {
+                            format!("&({})", right_expr)
+                        } else {
+                            format!("&({}).to_string()", right_expr)
+                        };
+                        
+                        format!("{} {} {}", left_str, op, right_str)
+                    } else {
+                        format!("{} {} ({})", self.generate_expression(left, None), op, self.generate_expression(right, None))
+                    }
                 } else {
                     format!("{} {} ({})", self.generate_expression(left, None), op, self.generate_expression(right, None))
                 }
             }
             Expression::Call(callee, args) => {
-                // Check if calling a Class Constructor
                 if let Expression::Variable(name) = &**callee {
                     if let Some(TypeDef::Class(_)) = self.type_defs.get(name) {
                         let arg_strs: Vec<String> = args.iter().map(|a| self.generate_expression(a, None)).collect();
@@ -315,7 +356,7 @@ impl Codegen {
             Expression::Member(obj, prop) => {
                 if let Expression::Variable(name) = &**obj {
                     if let Some(TypeDef::Enum(_)) = self.type_defs.get(name) {
-                        return format!("{}::{}", self.to_pascal_case(name), self.escape_identifier(prop));
+                        return format!("{}::{}", self.to_pascal_case(name), self.to_pascal_case(&self.escape_identifier(prop)));
                     }
                 }
                 format!("{}.{}", self.generate_expression(obj, None), self.escape_identifier(prop))

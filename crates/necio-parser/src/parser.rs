@@ -40,20 +40,21 @@ impl Parser {
                 if self.match_token(&Token::Let) {
                     TopLevel::Statement(self.parse_statement())
                 } else {
-                    // Try to parse as Type first
-                    // But wait, if it is Identifier, it could be Type or Expression.
-                    // If we parse as Type, we consume the Identifier.
-                    // If it turns out to be Expression, we need to reconstruct.
                     
                     let ty = self.parse_type();
+                
+                    let mutable = if self.match_token(&Token::Star) {
+                        self.eat(Token::Star);
+                        true
+                    } else {
+                        false
+                    };
                     
                     if let Token::Identifier(name) = &self.current_token {
-                        // Type ID ...
                         let name = name.clone();
                         self.eat(Token::Identifier("".to_string()));
                         
                         if self.match_token(&Token::LParen) {
-                            // Function: Type ID ( ...
                             self.eat(Token::LParen);
                             let params = self.parse_params();
                             self.eat(Token::RParen);
@@ -68,7 +69,6 @@ impl Parser {
                                 visibility: Visibility::Public,
                             })
                         } else if self.match_token(&Token::Assign) {
-                            // Global variable: Type Name := Value
                             self.eat(Token::Assign);
                             let value = self.parse_expression();
                             self.eat(Token::SemiColon);
@@ -76,39 +76,19 @@ impl Parser {
                                 name,
                                 type_annotation: Some(ty),
                                 initial_value: Some(value),
-                                mutable: false,
+                                mutable,
                             })
                         } else if self.match_token(&Token::Dot) {
-                             // Type ID . ... -> This implies Type was Custom(ID).
-                             // But we are here because next token was Identifier.
-                             // Example: `matheus.friends...`
-                             // `matheus` -> Type::Custom("matheus").
-                             // Next is `.`. NOT Identifier.
-                             // So we won't be in this block!
                              panic!("Unexpected token after Type ID: {:?}", self.current_token);
                         } else {
-                             // Type ID ... -> Maybe `person matheus;` (no init)?
-                             // Or `person matheus` followed by something else?
-                             // For now, assume invalid or missing semicolon?
-                             // Or maybe `Type ID` is expression? `Type` (ID) `ID` (Variable)?
-                             // No.
                              panic!("Unexpected token after Type ID: {:?}", self.current_token);
                         }
-                    } else {
-                        // Type ... (Next is NOT Identifier)
-                        // If Type was Custom(name), it could be an Expression starting with `name`.
-                        // Example: `matheus.friends...`
-                        // `matheus` parsed as Type::Custom("matheus").
-                        // Next is `.`.
-                        
+                    } else {                        
                         if let Type::Custom(name) = ty {
                              let expr = self.parse_expression_continuation(Expression::Variable(name));
                              self.eat(Token::SemiColon);
                              TopLevel::Statement(Statement::Expression(expr))
                         } else {
-                             // Primitive type followed by something else.
-                             // `integer;` -> Invalid.
-                             // `integer + 1;` -> Invalid.
                              panic!("Unexpected token after Type: {:?}", self.current_token);
                         }
                     }
@@ -198,14 +178,10 @@ impl Parser {
 
             if let Token::Identifier(id) = &self.current_token {
                 if id == &name {
-                    // Constructor check: if next is (, it is constructor.
-                    // If next is :, it is field.
-                    // Since we can't peek, we consume ID and check next.
                     let id_val = id.clone();
                     self.eat(Token::Identifier("".to_string()));
                     
                     if self.match_token(&Token::LParen) {
-                         // Constructor
                         self.eat(Token::LParen);
                         let params = self.parse_params();
                         self.eat(Token::RParen);
@@ -229,20 +205,36 @@ impl Parser {
                         fields.push((id_val, field_type));
                         continue;
                     } else {
-                         // Could be method if ID was Type? No, ID is ID.
-                         // If ID is Type, then next is Method Name.
-                         // But here ID matched Class Name.
-                         // So it's either Constructor or Field of type ClassName.
-                         // Field syntax: Name: Type.
-                         // If we parsed Name, next is Colon.
-                         // If we parsed Type, next is Name.
-                         // Here we assumed it's Name.
                          panic!("Unexpected token in class body after identifier: {:?}", self.current_token);
                     }
                 }
             }
 
+            if self.match_token(&Token::Star) {
+                self.eat(Token::Star);
+            }
+
             let ty_or_name = self.parse_type();
+            
+            if let Type::Custom(ref type_name) = ty_or_name {
+                if type_name == &name && self.match_token(&Token::LParen) {
+                    self.eat(Token::LParen);
+                    let params = self.parse_params();
+                    self.eat(Token::RParen);
+                    self.eat(Token::LBrace);
+                    let body = self.parse_block();
+                    self.eat(Token::RBrace);
+                    
+                    constructor = Some(Function {
+                        name: "new".to_string(),
+                        params,
+                        return_type: Type::Custom(name.clone()),
+                        body,
+                        visibility,
+                    });
+                    continue;
+                }
+            }
             
             if self.match_token(&Token::Colon) {
                 if let Type::Custom(field_name) = ty_or_name {

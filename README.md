@@ -41,7 +41,7 @@ Example:
 cargo run --bin necio -- examples/main.necio output.rs
 
 # Compile and run the generated Rust code
-rustc output.rs -o output
+rustc output.rs -o output.exe
 ./output
 ```
 

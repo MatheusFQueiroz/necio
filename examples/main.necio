@@ -2,59 +2,6 @@ integer sum (a: integer, b: integer) {
     return a + b;
 }
 
-interface address {
-    street: string;
-    number: integer;
-    city: string;
-    state: string;
-    zip_code: string;
-}
-
-interface person {
-    name: string;
-    age: integer;
-    is_adult: boolean;
-    height: float;
-    address: <address>;
-    friends: <person>[];
-}
-
-person matheus := {
-    name: "Matheus",
-    age: 20,
-    is_adult: true,
-    height: 1.78,
-    address: {
-        street: "Rua 1",
-        number: 1,
-        city: "São Paulo",
-        state: "SP",
-        zip_code: "00000-000"
-    },
-    friends: []
-};
-
-person julia := {
-    name: "Julia",
-    age: 21,
-    is_adult: true,
-    height: 1.65,
-    address: {
-        street: "Rua 2",
-        number: 2,
-        city: "São Paulo",
-        state: "SP",
-        zip_code: "00000-000"
-    },
-    friends: [
-        matheus,
-    ]
-};
-
-matheus.friends.push(julia);
-
-printl(matheus.friends[0].name);
-
 enum animal_type {
     cat,
     dog,
@@ -67,7 +14,7 @@ class animal {
     type: <animal_type>;
     is_dangerous: boolean;
 
-    animal (name: string, type: <animal_type>) {
+    *animal (name: string, type: <animal_type>) {
         this.name := name;
         this.type := type;
     }
@@ -93,10 +40,13 @@ class animal {
     }
 }
 
-animal cat := animal("Jasmini", animal_type.cat);
+animal *cat := animal("Jasmini", animal_type.cat);
 cat.make_sound();
 cat.set_is_dangerous();
 printl(cat.name + " is dangerous: " + cat.is_dangerous);
+
+animal *dog := animal("Rex", animal_type.dog);
+dog.make_sound();
 
 void main () {
     let x: integer;
