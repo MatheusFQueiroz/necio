@@ -3,5 +3,28 @@
 version = 4
 
 [[package]]
-name = "necio"
+name = "necio-analysis"
+version = "0.1.0"
+
+[[package]]
+name = "necio-cli"
+version = "0.1.0"
+dependencies = [
+ "necio-codegen",
+ "necio-parser",
+]
+
+[[package]]
+name = "necio-codegen"
+version = "0.1.0"
+dependencies = [
+ "necio-parser",
+]
+
+[[package]]
+name = "necio-parser"
+version = "0.1.0"
+
+[[package]]
+name = "necio-stdlib"
 version = "0.1.0"

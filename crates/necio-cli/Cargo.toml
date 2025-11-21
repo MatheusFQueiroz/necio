@@ -1,0 +1,12 @@
+[package]
+name = "necio-cli"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "necio"
+path = "src/main.rs"
+
+[dependencies]
+necio-parser = { path = "../necio-parser" }
+necio-codegen = { path = "../necio-codegen" }

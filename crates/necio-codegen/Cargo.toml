@@ -1,0 +1,7 @@
+[package]
+name = "necio-codegen"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+necio-parser = { path = "../necio-parser" }

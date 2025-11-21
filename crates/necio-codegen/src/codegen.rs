@@ -1,4 +1,4 @@
-use crate::ast::{Class, Enum, Expression, Function, Interface, Program, Statement, TopLevel, Type, Visibility};
+use necio_parser::ast::{Class, Enum, Expression, Function, Interface, Program, Statement, TopLevel, Type, Visibility};
 use std::collections::HashMap;
 
 pub struct Codegen {

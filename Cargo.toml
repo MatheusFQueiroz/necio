@@ -1,6 +1,19 @@
-[package]
-name = "necio"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "2"
+members = [
+    "crates/necio-cli",
+    "crates/necio-parser",
+    "crates/necio-codegen",
+    "crates/necio-analysis",
+    "crates/necio-stdlib",
+]
 
-[dependencies]
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Necio Contributors"]
+license = "MIT"
+
+[profile.release]
+opt-level = 3
+lto = true
