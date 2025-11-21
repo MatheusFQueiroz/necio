@@ -8,6 +8,7 @@ Necio follows a modular workspace architecture with separate crates for differen
 
 ```
 necio/
+├── deps/                 # Project dependencies
 ├── crates/
 │   ├── necio-cli/        # Command-line interface
 │   ├── necio-parser/     # Lexer, Parser, and AST
